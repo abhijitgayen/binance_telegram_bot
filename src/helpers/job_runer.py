@@ -1,77 +1,50 @@
-import threading
+import asyncio
 import time
-import sys
-from src.db.init import Database
 from telegram import Update
 from telegram.ext import ContextTypes
-import asyncio
+from setting import LIST_ADS_SLEEP , CREATE_ORDER_SLEEP
 
 class JobRunner:
     def __init__(self):
         self.stop_threads = False
-        self.fetch_thread = None
-        self.process_thread = None
+        self.fetch_task = None
+        self.process_task = None
 
     # Example Job 1: Fetch Ads (with a parameter)
-    def fetch_ads(self, db:Database , update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def fetch_ads(self, db, update: Update, context: ContextTypes.DEFAULT_TYPE, callback=None):
         while not self.stop_threads:
             print(f"Fetching ads from ...")
             await update.message.reply_text("Fetching ads from ...", disable_notification=True)
-            time.sleep(2)  # Simulate work by waiting for 2 seconds
+            await asyncio.sleep(LIST_ADS_SLEEP)   
+            if callback:
+                callback("Fetched Ads")
 
     # Example Job 2: Process Ads (with a parameter)
-    def process_ads(self, db:Database , update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def process_ads(self, db, update: Update, context: ContextTypes.DEFAULT_TYPE, callback=None):
         while not self.stop_threads:
             print(f"Processing ads with method...")
             await update.message.reply_text('Processing ads with method...', disable_notification=True)
-            time.sleep(3)  # Simulate work by waiting for 3 seconds
+            await asyncio.sleep(CREATE_ORDER_SLEEP)
+            if callback:
+                callback("Processed Ads")
 
-    # Function to run both jobs in parallel with parameters
-    def run_parallel_jobs(self, db:Database , update: Update, context: ContextTypes.DEFAULT_TYPE):
-        # Reset stop flag and create threads for both jobs
-        self.stop_threads = False
-        self.fetch_thread = threading.Thread(target=self.fetch_ads, args=(db, update, context))
-        self.process_thread = threading.Thread(target=self.process_ads, args=(db, update, context))
+    # Function to run both jobs in parallel with parameters and callback
+    def run_parallel_jobs(self, db, update: Update, context: ContextTypes.DEFAULT_TYPE, callback=None):
+        self.stop_threads = False  # Reset stop flag
 
-        # Start both threads
-        self.fetch_thread.start()
-        self.process_thread.start()
+        # Create and start asyncio tasks for both jobs
+        loop = asyncio.get_event_loop()
+        self.fetch_task = loop.create_task(self.fetch_ads(db, update, context, callback))
+        self.process_task = loop.create_task(self.process_ads(db, update, context, callback))
 
-    # Method to stop the threads manually
+    # Method to stop the tasks manually
     def stop(self):
-        print("Stopping threads manually...")
-        self.stop_threads = True  # Set the flag to stop the threads
+        print("Stopping jobs manually...")
+        self.stop_threads = True  # Set the flag to stop the jobs
 
-        if self.fetch_thread and self.fetch_thread.is_alive():
-            self.fetch_thread.join()
+        if self.fetch_task:
+            self.fetch_task.cancel()
+        if self.process_task:
+            self.process_task.cancel()
 
-        if self.process_thread and self.process_thread.is_alive():
-            self.process_thread.join()
-
-        print("Threads have been stopped.")
-
-# Usage Example
-if __name__ == "__main__":
-    job_runner = JobRunner()
-
-    # Start the parallel jobs with parameters
-    job_runner.run_parallel_jobs(ad_source="API", process_type="Batch")
-
-    # Simulate some running time
-    time.sleep(10)  # Run for 10 seconds
-
-    # Stop the threads manually
-    job_runner.stop()
-
-    # Restart the parallel jobs with new parameters
-    print("\nRestarting jobs with new parameters...\n")
-    job_runner.run_parallel_jobs(ad_source="Database", process_type="Real-time")
-
-    # Simulate some more running time
-    time.sleep(5)
-
-    # Stop the threads again
-    job_runner.stop()
-
-    # Optionally, terminate the program cleanly
-    sys.exit(0)
+        print("Jobs have been stopped.")

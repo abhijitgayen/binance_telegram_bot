@@ -6,8 +6,6 @@ from src.helpers.send_message import send_text_with_custom_keyboard
 from src.db.init import Database
 from setting import ALLOWED_USER
 from src.helpers.job_runer import JobRunner
-import asyncio
-
 
 # Callback Query Handler to process button presses
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -21,6 +19,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def reply_hi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+    print(update.message.text.lower(), 'oooop')
     # Check if the message is 'hi'
     if update.message.text.lower() == 'hi':
         await update.message.reply_text("Hello! How can I help you today?")
@@ -68,5 +68,5 @@ if __name__ == "__main__":
     if TELEGRAM_TOKEN is None:
         print("TELEGRAM_TOKEN is missing")
     else:
-        asyncio.run(main(token=TELEGRAM_TOKEN))
+        main(token=TELEGRAM_TOKEN)
         
