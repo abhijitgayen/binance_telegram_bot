@@ -5,7 +5,7 @@ class Database:
     def __init__(self, db_name="bot_data.db"):
         """Initializes the Database with the given name."""
         self.db_name = db_name
-        self.conn = sqlite3.connect(self.db_name)
+        self.conn = sqlite3.connect(self.db_name,check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.initialize_db()
 
@@ -19,37 +19,23 @@ class Database:
                 bot_config TEXT  -- Column for storing JSON data
             )
         """)
-        # self.cursor.execute("""
-        #     CREATE TABLE IF NOT EXISTS ads (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         adv_order_number TEXT,
-        #         price REAL,
-        #         surplus_amount REAL,
-        #         min_single_trans_amount REAL,
-        #         max_single_trans_amount REAL,
-        #         nick_name TEXT,
-        #         user_no TEXT,
-        #         trade_methods TEXT,
-        #         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        #     )
-        # """)
-        # self.cursor.execute("""
-        #     CREATE TABLE IF NOT EXISTS order_responses (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         order_number TEXT,
-        #         adv_order_number TEXT,
-        #         buyer_nickname TEXT,
-        #         buyer_name TEXT,
-        #         asset TEXT,
-        #         fiat_unit TEXT,
-        #         amount REAL,
-        #         price REAL,
-        #         total_price REAL,
-        #         trade_type TEXT,
-        #         pay_type TEXT,
-        #         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        #     )
-        # """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ads (
+                advNo TEXT  PRIMARY KEY,             
+                price REAL NOT NULL,                
+                surplusAmount REAL NOT NULL,         
+                minSingleTransAmount REAL NOT NULL,  
+                maxSingleTransAmount REAL NOT NULL,   
+                tradeType TEXT NOT NULL,             
+                minSingleTransQuantity REAL NOT NULL,  
+                maxSingleTransQuantity REAL NOT NULL,
+                apiResponseCode TEXT,
+                apiResponseMessage TEXT,
+                data TEXT,  -- Column for storing JSON data
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- auto set on insert
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+         """)
         self.conn.commit()
 
     def insert_user(self, user_id, first_name, last_name, extra_info=None):
@@ -101,32 +87,182 @@ class Database:
             return user_data
         return None
     
-
-
-
-
-
-
-    
-    def insert_ad(self, ad):
+    def insert_ad(self, ads):
         """Insert a single ad record into the database."""
-        self.cursor.execute("""
-            INSERT INTO ads (
-                adv_order_number, price, surplus_amount, 
-                min_single_trans_amount, max_single_trans_amount, 
-                nick_name, user_no, trade_methods
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            ad.get("adv_order_number"),
-            ad.get("price"),
-            ad.get("surplus_amount"),
-            ad.get("min_single_trans_amount"),
-            ad.get("max_single_trans_amount"),
-            ad.get("nick_name"),
-            ad.get("user_no"),
-            ad.get("trade_methods")
-        ))
-        self.connection.commit()
+        try:
+            ads_data = []
+            for ad in ads:
+                adv = ad.get('adv', {})
+        
+                # Extract relevant fields
+                adv_no = adv.get('advNo')
+                price = float(adv.get('price', 0))
+                surplus_amount = float(adv.get('surplusAmount', 0))
+                min_single_trans_amount = float(adv.get('minSingleTransAmount', 0))
+                max_single_trans_amount = float(adv.get('maxSingleTransAmount', 0))
+                trade_type = adv.get('tradeType')
+                min_single_trans_quantity = float(adv.get('minSingleTransQuantity', 0))
+                max_single_trans_quantity = float(adv.get('maxSingleTransQuantity', 0))
+                api_response_code = None  # Placeholder for API response code
+                api_response_message = None  # Placeholder for API response message
+                data = json.dumps(ad)  # Serialize the entire ad as JSON
+
+                # Add to the list of data to insert
+                ads_data.append((
+                    adv_no, price, surplus_amount, min_single_trans_amount, max_single_trans_amount,
+                    trade_type, min_single_trans_quantity, max_single_trans_quantity, data
+                ))
+            
+            # self.cursor.executemany("""
+            #     INSERT INTO ads (
+            #         advNo, price, surplusAmount, minSingleTransAmount, maxSingleTransAmount,
+            #         tradeType, minSingleTransQuantity, maxSingleTransQuantity, data
+            #     )
+            #     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            #     ON CONFLICT(data)
+            #     DO UPDATE SET
+            #         surplusAmount = excluded.surplusAmount,
+            #         minSingleTransAmount = excluded.minSingleTransAmount,
+            #         maxSingleTransAmount = excluded.maxSingleTransAmount,
+            #         tradeType = excluded.tradeType,
+            #         minSingleTransQuantity = excluded.minSingleTransQuantity,
+            #         maxSingleTransQuantity = excluded.maxSingleTransQuantity,
+            #         apiResponseCode = NULL,
+            #         apiResponseMessage = NULL,
+            #         data = excluded.data,
+            #         updatedAt = CURRENT_TIMESTAMP
+            # """, ads_data)
+
+            self.cursor.executemany("""
+                INSERT INTO ads (
+                    advNo, price, surplusAmount, minSingleTransAmount, maxSingleTransAmount,
+                    tradeType, minSingleTransQuantity, maxSingleTransQuantity, data
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(advNo)
+                DO UPDATE SET
+                    price = CASE 
+                            WHEN ads.data != excluded.data THEN excluded.price
+                            ELSE ads.price
+                            END,
+                    surplusAmount = CASE 
+                                    WHEN ads.data != excluded.data THEN excluded.surplusAmount
+                                    ELSE ads.surplusAmount
+                                    END,
+                    minSingleTransAmount = CASE 
+                                        WHEN ads.data != excluded.data THEN excluded.minSingleTransAmount
+                                        ELSE ads.minSingleTransAmount
+                                        END,
+                    maxSingleTransAmount = CASE 
+                                        WHEN ads.data != excluded.data THEN excluded.maxSingleTransAmount
+                                        ELSE ads.maxSingleTransAmount
+                                        END,
+                    tradeType = CASE 
+                                WHEN ads.data != excluded.data THEN excluded.tradeType
+                                ELSE ads.tradeType
+                                END,
+                    minSingleTransQuantity = CASE 
+                                            WHEN ads.data != excluded.data THEN excluded.minSingleTransQuantity
+                                            ELSE ads.minSingleTransQuantity
+                                            END,
+                    maxSingleTransQuantity = CASE 
+                                            WHEN ads.data != excluded.data THEN excluded.maxSingleTransQuantity
+                                            ELSE ads.maxSingleTransQuantity
+                                            END,
+                    data = CASE 
+                            WHEN ads.data != excluded.data THEN excluded.data
+                            ELSE ads.data
+                            END,
+                    apiResponseCode = CASE 
+                                    WHEN ads.data != excluded.data THEN NULL
+                                    ELSE ads.apiResponseCode
+                                    END,
+                    apiResponseMessage = CASE 
+                                        WHEN ads.data != excluded.data THEN NULL
+                                        ELSE ads.apiResponseMessage
+                                        END,
+                    updatedAt = CURRENT_TIMESTAMP  -- Update timestamp when any field changes
+                """, ads_data)
+
+            self.conn.commit()
+        except sqlite3.Error as e:
+            print(f"An error occurred while inserting ads: {e}")
+    
+    def update_ads_response(self, adv_no, response_code, response_message):
+        """Update the API response for a specific ad in the database."""
+        try:
+            # Execute the update query for the given advNo
+            self.cursor.execute("""
+                UPDATE ads
+                SET apiResponseCode = ?,
+                    apiResponseMessage = ?,
+                    updatedAt = CURRENT_TIMESTAMP
+                WHERE advNo = ?
+            """, (response_code, response_message, adv_no))
+            
+            # Commit the changes to the database
+            self.conn.commit()
+        except sqlite3.Error as e:
+            print(f"An error occurred while updating ad response: {e}")
+
+    def delete_all_ads(self):
+        """Delete all ads from the database."""
+        try:
+            # Execute the delete query
+            self.cursor.execute("DELETE FROM ads")
+            
+            # Commit the changes to the database
+            self.conn.commit()
+            
+            print("All ads have been deleted.")
+        except sqlite3.Error as e:
+            print(f"An error occurred while deleting ads: {e}")
+
+
+    def get_filtered_ads(self, extra_filter):
+        # Construct the SQL query with dynamic filtering
+        query = "SELECT * FROM ads WHERE 1=1"
+        params = []
+
+        # Add filters to the query
+        if extra_filter.get("price") is not None:
+            query += " AND price < ?"
+            params.append(extra_filter["price"])
+        if extra_filter.get("minimum_limit") is not None:
+            query += " AND maxSingleTransAmount >= ?"
+            params.append(extra_filter["minimum_limit"])
+        if extra_filter.get("maximum_limit") is not None:
+            query += " AND minSingleTransAmount <= ?"
+            params.append(extra_filter["maximum_limit"])
+        if extra_filter.get("error_code") is not None:
+            query += " AND (apiResponseCode != ? OR apiResponseCode IS NULL)"
+            params.append(extra_filter["error_code"])
+
+        query += " ORDER BY createdAt DESC"
+
+        # Execute the query
+        self.cursor.execute(query, params)
+        rows = self.cursor.fetchall()
+
+        # Get column names
+        column_names = [description[0] for description in self.cursor.description]
+
+        # Convert rows to dictionaries
+        ads = []
+        for row in rows:
+            ad = dict(zip(column_names, row))
+            # Deserialize the JSON data column
+            if 'data' in ad and ad['data']:
+                ad['data'] = json.loads(ad['data'])
+            ads.append(ad)
+
+        return ads
+    
+
+
+
+
+
 
     def insert_order_response(self, order_response):
         """Insert an order response into the database."""

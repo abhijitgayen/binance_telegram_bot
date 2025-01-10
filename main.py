@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
-from src.helpers.commands import start, help, about, stop, get_config, set_config, reset, run
+from src.helpers.commands import start, help, about, stop, get_config, set_config, reset, run, status, clean_ads
 from setting import TELEGRAM_TOKEN
 from src.helpers.send_message import send_text_with_custom_keyboard
 from src.db.init import Database
@@ -19,22 +19,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def reply_hi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-
-    print(update.message.text.lower(), 'oooop')
-    # Check if the message is 'hi'
-    if update.message.text.lower() == 'hi':
-        await update.message.reply_text("Hello! How can I help you today?")
-
-    if update.message.text.lower() == 'ops':
-        button_data = ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5", "Option 6", "Option 7", "Option 8", "Option 9"]
-        await send_text_with_custom_keyboard(update, "Choose an option:", button_data)
-         
+    await update.message.reply_text("Hello! How can I help you today? \nFor assistance, type /help.")
 
 
 # Main Function to Start the Bot
 def main(token):
     application = Application.builder().token(token).build()
-    application.db =  Database(f"{ALLOWED_USER}.db")
+    application.db =  Database(f"{ALLOWED_USER}_ops.db")
     application.job_runner = JobRunner()
 
     # Register command handlers
@@ -48,6 +39,8 @@ def main(token):
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("run", run))
     application.add_handler(CommandHandler("stop", stop))
+    application.add_handler(CommandHandler("status", status))
+    application.add_handler(CommandHandler("clean_ads",clean_ads))
 
     # Others
     application.add_handler(CommandHandler("help", help))
