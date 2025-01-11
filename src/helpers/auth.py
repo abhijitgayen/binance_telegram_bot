@@ -10,7 +10,7 @@ from src.db.init import Database
 def restricted(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if update.effective_user.id != ALLOWED_USER:
+        if str(update.effective_user.id) != ALLOWED_USER:
             await update.message.reply_text(
                 "🚫 *Access Denied*\n\n"
                 "You are not authorized to use this bot. "
