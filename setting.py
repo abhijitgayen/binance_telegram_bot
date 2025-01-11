@@ -7,9 +7,9 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv ('TELEGRAM_TOKEN')
 ALLOWED_USER = os.getenv("ALLOWED_USER","")
 NOTIFY_USER_ID = os.getenv ('NOTIFY_USER_ID')
-LIST_ADS_SLEEP = 5
-CREATE_ORDER_SLEEP = 9
-BINANCE_API_URL = 'https://api.binance.com'
+LIST_ADS_SLEEP = int(os.getenv('LIST_ADS_SLEEP', '5'))
+CREATE_ORDER_SLEEP = int(os.getenv('CREATE_ORDER_SLEEP', '9')) 
+BINANCE_API_URL = os.getenv('BINANCE_API_URL')
 
 DEFAULT_BOT_CONFIG = {
     "ASSET": "USDT",
