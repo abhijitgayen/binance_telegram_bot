@@ -64,6 +64,11 @@ Ensure the following are installed on your system:
    docker run --env-file .env telegram_bot
    ```
 
+3. For Background Runing
+   ```bash
+   docker run -d --env-file .env telegram_bot
+   ```
+
 3. Check the logs to ensure the bot is running:
    ```bash
    docker logs <container_id>
