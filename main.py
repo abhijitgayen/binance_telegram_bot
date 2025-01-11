@@ -6,8 +6,10 @@ from src.helpers.send_message import send_text_with_custom_keyboard
 from src.db.init import Database
 from setting import ALLOWED_USER
 from src.helpers.job_runer import JobRunner
+from src.helpers.auth import restricted
 
 # Callback Query Handler to process button presses
+@restricted
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()  # Acknowledge the callback query
@@ -17,7 +19,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if callback_data == "button_1":
         await query.edit_message_text("You pressed Button 1!")
 
-
+@restricted
 async def reply_hi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Hello! How can I help you today? \nFor assistance, type /help.")
 

@@ -2,7 +2,6 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from src.helpers.auth import restricted
 from src.db.init import Database
-from src.helpers.send_message import send_dynamic_message
 from src.helpers.generate_message import generate_config_message
 from setting import DEFAULT_BOT_CONFIG
 from src.helpers.job_runer import JobRunner
