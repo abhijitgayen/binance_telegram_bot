@@ -28,6 +28,10 @@ async def run(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     job_runner: JobRunner = context.application.job_runner
     db: Database = context.application.db
     user_data = db.get_user(update.effective_user.id)
+    
+    if (not user_data) or (not user_data.get('bot_config')):
+        await need_to_start (update)
+
     bot_config = user_data.get('bot_config') or {}
     job_runner.set_api_config(bot_config)
     run_reply = f"🤖 The bot is running in the background!\n\n✨ To stop it, use: /stop\n🔍 To check its status, use: /status"
@@ -63,6 +67,10 @@ async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     """Handle the /get_config command to view the current configuration."""
     db: Database = context.application.db
     user_data = db.get_user(update.effective_user.id)
+
+    if (not user_data) or (not user_data.get('bot_config')):
+        await need_to_start (update)
+
     bot_config = user_data.get('bot_config') or {}
     config_message = generate_config_message (bot_config)
     await update.message.reply_text(config_message, parse_mode="Markdown")
@@ -91,16 +99,20 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         pass  # Leave as a string if it cannot be converted
 
     user_id = update.effective_user.id
-    db_instance :Database = context.application.db
+    db :Database = context.application.db
 
-    success = update_config(user_id, key, value, db_instance)
+    success = update_config(user_id, key, value, db, update)
     if success:
         await update.message.reply_text(f"✅ Updated >> {key} : {value} \n\n To see the config run /get_config")
     else:
         await update.message.reply_text(f"❌ Failed to update configuration. Invalid key: `{key}`", parse_mode="Markdown")
 
-def update_config(user_id, key, value, db_instance) -> bool:
-    user_data = db_instance.get_user(user_id)
+async def update_config(user_id, key, value, db: Database, update: Update) -> bool:
+    user_data = db.get_user(user_id)
+
+    if (not user_data) or (not user_data.get('bot_config')):
+        await need_to_start (update)
+
     current_config = user_data.get('bot_config')
 
     if not current_config:
@@ -122,7 +134,7 @@ def update_config(user_id, key, value, db_instance) -> bool:
     if last_key in config_section:
         config_section[last_key] = value
         # Update the database with the new configuration
-        db_instance.update_bot_config(user_id, current_config)
+        db.update_bot_config(user_id, current_config)
         return True
 
     return False  # Key not found
@@ -162,3 +174,12 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @restricted
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("A secure bot for seamless peer-to-peer trading on Binance, allowing authorized users to easily execute buy and sell orders.")
+
+async def need_to_start (update: Update) -> None:
+    message = (
+        "🚀 To get started, please start the chatbot",
+        "and complete the initial configuration setup.",
+        "Let's get everything ready for a smooth experience! 😊",
+        "\nUse the command /start to start the bot."
+    )
+    await update.message.reply_text(message, parse_mode="Markdown")
