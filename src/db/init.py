@@ -50,6 +50,8 @@ class Database:
     def insert_or_update_user(self, user_id, first_name, last_name, extra_info=None):
         """Inserts a new user or updates an existing user in the users table."""
         bot_config_json = json.dumps(extra_info) if extra_info else None  # Convert dictionary to JSON string
+
+        print(bot_config_json, 'bot_config_json')
         self.cursor.execute('''
             INSERT INTO users (id, first_name, last_name, bot_config)
             VALUES (?, ?, ?, ?)
@@ -234,9 +236,16 @@ class Database:
         if extra_filter.get("maximum_limit") is not None:
             query += " AND minSingleTransAmount <= ?"
             params.append(extra_filter["maximum_limit"])
-        if extra_filter.get("error_code") is not None:
-            query += " AND (apiResponseCode != ? OR apiResponseCode IS NULL)"
-            params.append(extra_filter["error_code"])
+        if extra_filter.get("error_codes"):
+            error_codes = extra_filter["error_codes"]
+            if isinstance(error_codes, str):
+                error_codes = [error_codes]
+            elif not isinstance(error_codes, list):
+                raise ValueError("error_codes must be string or list")
+                
+            placeholders = ','.join('?' * len(error_codes))
+            query += f" AND (apiResponseCode NOT IN ({placeholders}) OR apiResponseCode IS NULL)"
+            params.extend(error_codes)
 
         query += " ORDER BY createdAt DESC"
 
@@ -258,11 +267,6 @@ class Database:
 
         return ads
     
-
-
-
-
-
 
     def insert_order_response(self, order_response):
         """Insert an order response into the database."""

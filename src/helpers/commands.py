@@ -31,6 +31,7 @@ async def run(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     if (not user_data) or (not user_data.get('bot_config')):
         await need_to_start (update)
+        return
 
     bot_config = user_data.get('bot_config') or {}
     job_runner.set_api_config(bot_config)
@@ -70,6 +71,7 @@ async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     if (not user_data) or (not user_data.get('bot_config')):
         await need_to_start (update)
+        return
 
     bot_config = user_data.get('bot_config') or {}
     config_message = generate_config_message (bot_config)
@@ -81,27 +83,44 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     """Handle the /set_config command."""
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Usage: `/set_config <key> <value>` \nExample: `/set_config TRADE_TYPE SELL`",
+            "🛠 **Usage:**\n"
+            "`/set_config <key> <value>`\n\n"
+            "📌 **Example:**\n"
+            "`/set_config TRADE_TYPE SELL`\n\n"
+            "🔗 **For arrays:**\n"
+            "`/set_config EXTRA_FILTER.error_codes 83683,83682`",
             parse_mode="Markdown"
         )
+
         return
 
     key = context.args[0]
-    value = context.args[1]
+    value = ' '.join(context.args[1:])  # Join all remaining args
 
-    # Convert value to int or float if needed
-    try:
-        if value.isdigit():
-            value = int(value)
-        else:
-            value = float(value) if '.' in value else value
-    except ValueError:
-        pass  # Leave as a string if it cannot be converted
+    # Handle array values
+    if key == "EXTRA_FILTER.error_codes":
+        try:
+            # Remove brackets and split by comma
+            value = value.strip('[]').replace(' ', '').split(',')
+            # Remove empty strings
+            value = [v.strip("'\"") for v in value if v]
+        except:
+            await update.message.reply_text("❌ Invalid array format. Use: `83683,83682`", parse_mode="Markdown")
+            return
+    else:
+        # Convert value to int or float if needed
+        try:
+            if value.isdigit():
+                value = int(value)
+            else:
+                value = float(value) if '.' in value else value
+        except ValueError:
+            pass
 
     user_id = update.effective_user.id
-    db :Database = context.application.db
+    db: Database = context.application.db
 
-    success = update_config(user_id, key, value, db, update)
+    success = await update_config(user_id, key, value, db, update)
     if success:
         await update.message.reply_text(f"✅ Updated >> {key} : {value} \n\n To see the config run /get_config")
     else:
@@ -112,6 +131,7 @@ async def update_config(user_id, key, value, db: Database, update: Update) -> bo
 
     if (not user_data) or (not user_data.get('bot_config')):
         await need_to_start (update)
+        return
 
     current_config = user_data.get('bot_config')
 
@@ -176,10 +196,5 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("A secure bot for seamless peer-to-peer trading on Binance, allowing authorized users to easily execute buy and sell orders.")
 
 async def need_to_start (update: Update) -> None:
-    message = (
-        "🚀 To get started, please start the chatbot",
-        "and complete the initial configuration setup.",
-        "Let's get everything ready for a smooth experience! 😊",
-        "\nUse the command /start to start the bot."
-    )
-    await update.message.reply_text(message, parse_mode="Markdown")
+    need_start_message = "🚀 To get started, please start the chatbot \nand complete the initial configuration setup.\nLet's get everything ready for a smooth experience! 😊\nUse the command /start to start the bot."
+    await update.message.reply_text(need_start_message, parse_mode="Markdown")

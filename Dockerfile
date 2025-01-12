@@ -19,8 +19,5 @@ COPY . .
 # Load environment variables from a .env file
 RUN pip install python-dotenv
 
-# Expose a port if required (optional, for debugging purposes)
-EXPOSE 8000
-
 # Command to run the bot
 CMD ["python", "main.py"]

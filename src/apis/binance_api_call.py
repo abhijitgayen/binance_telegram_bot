@@ -195,4 +195,3 @@ class BinanceApiCall:
             if index < len(ads) - 1:
                 print(f"Waiting for {self.sleep_time} seconds before placing the next order...")
                 time.sleep(self.sleep_time)
-
