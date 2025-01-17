@@ -24,3 +24,5 @@ var/
 .vscode/
 *.log
 *.db
+
+venv

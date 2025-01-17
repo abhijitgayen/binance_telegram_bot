@@ -22,7 +22,7 @@ DEFAULT_BOT_CONFIG = {
     "EXTRA_FILTER": {
         "price": 85,
         "minimum_limit": 100,
-        "maximum_limit": 1000,
+        # "maximum_limit": 1000,
         "error_codes": ["83683","83682"]
     },
     "API_KEY": "",

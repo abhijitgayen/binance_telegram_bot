@@ -114,26 +114,6 @@ class Database:
                     adv_no, price, surplus_amount, min_single_trans_amount, max_single_trans_amount,
                     trade_type, min_single_trans_quantity, max_single_trans_quantity, data
                 ))
-            
-            # self.cursor.executemany("""
-            #     INSERT INTO ads (
-            #         advNo, price, surplusAmount, minSingleTransAmount, maxSingleTransAmount,
-            #         tradeType, minSingleTransQuantity, maxSingleTransQuantity, data
-            #     )
-            #     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            #     ON CONFLICT(data)
-            #     DO UPDATE SET
-            #         surplusAmount = excluded.surplusAmount,
-            #         minSingleTransAmount = excluded.minSingleTransAmount,
-            #         maxSingleTransAmount = excluded.maxSingleTransAmount,
-            #         tradeType = excluded.tradeType,
-            #         minSingleTransQuantity = excluded.minSingleTransQuantity,
-            #         maxSingleTransQuantity = excluded.maxSingleTransQuantity,
-            #         apiResponseCode = NULL,
-            #         apiResponseMessage = NULL,
-            #         data = excluded.data,
-            #         updatedAt = CURRENT_TIMESTAMP
-            # """, ads_data)
 
             self.cursor.executemany("""
                 INSERT INTO ads (
@@ -233,9 +213,11 @@ class Database:
         if extra_filter.get("minimum_limit") is not None:
             query += " AND maxSingleTransAmount >= ?"
             params.append(extra_filter["minimum_limit"])
-        if extra_filter.get("maximum_limit") is not None:
-            query += " AND minSingleTransAmount <= ?"
-            params.append(extra_filter["maximum_limit"])
+
+        # if extra_filter.get("maximum_limit") is not None:
+        #     query += " AND minSingleTransAmount <= ?"
+        #     params.append(extra_filter["maximum_limit"])
+        
         if extra_filter.get("error_codes"):
             error_codes = extra_filter["error_codes"]
             if isinstance(error_codes, str):
