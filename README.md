@@ -69,6 +69,11 @@ Ensure the following are installed on your system:
    docker run -d --env-file .env telegram_bot
    ```
 
+4. 
+   ```bash
+   docker run -d --env-file .env -v $(pwd)/db:/app/db telegram_bot --name telegram_bot
+   ```
+
 3. Check the logs to ensure the bot is running:
    ```bash
    docker logs <container_id>
@@ -78,4 +83,7 @@ Ensure the following are installed on your system:
    ```bash
    sudo find /var/lib/docker/containers/ -type f -name "*.log" -exec truncate -s 0 {} \;
    ```
+
+ 
+
   

@@ -37,7 +37,7 @@ async def reply_hi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main(token):
     try:
         application = Application.builder().token(token).build()
-        application.db = Database(f"{ALLOWED_USER}.db")
+        application.db = Database(f"db/{ALLOWED_USER}.db")
         application.job_runner = JobRunner()
 
         # Add error handler

@@ -37,8 +37,6 @@ def direct_notify_admin(message, req_body={}, need_pin=False):
             "disable_notification": True
         }
 
-        print(f"Payload: {payload}")  # Debugging payload
-
         # Send the message using a POST request
         response = requests.post(url, json=payload)
 
