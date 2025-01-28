@@ -36,7 +36,7 @@ Ensure the following are installed on your system:
    ```
 
 3. Create a `.env` file in the root directory with the following content:
-   ```dotenv
+   ```env
    BINANCE_API_URL=https://api.binance.com
    TELEGRAM_TOKEN=7908006935:AAE3PQUHwESkWCCplmde1F8l234freferfk
    NOTIFY_USER_ID=2085862908
@@ -70,7 +70,7 @@ Ensure the following are installed on your system:
 
 4. Mounting the path
    ```bash
-   docker run -d --env-file .env -v $(pwd)/db:/app/db telegram_bot --name telegram_bot
+   docker run -d --env-file .env -v $(pwd)/db:/app/db --name telegram_bot_me telegram_bot
    ```
 
 5. Check the logs to ensure the bot is running:
