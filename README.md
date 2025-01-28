@@ -73,3 +73,9 @@ Ensure the following are installed on your system:
    ```bash
    docker logs <container_id>
    ```
+
+4. Clean all container logs
+   ```bash
+   sudo find /var/lib/docker/containers/ -type f -name "*.log" -exec truncate -s 0 {} \;
+   ```
+  

@@ -28,17 +28,6 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             "Sorry, something went wrong. The administrator has been notified."
         )
 
-# Callback Query Handler to process button presses
-@restricted
-async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    await query.answer()  # Acknowledge the callback query
-
-    # Get the callback data (the value passed in callback_data)
-    callback_data = query.data
-    if callback_data == "button_1":
-        await query.edit_message_text("You pressed Button 1!")
-
 @restricted
 async def reply_hi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Hello! How can I help you today? \nFor assistance, type /help.")
@@ -48,7 +37,7 @@ async def reply_hi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main(token):
     try:
         application = Application.builder().token(token).build()
-        application.db = Database(f"{ALLOWED_USER}_ops.db")
+        application.db = Database(f"{ALLOWED_USER}.db")
         application.job_runner = JobRunner()
 
         # Add error handler
@@ -75,8 +64,6 @@ def main(token):
 
         # Register the message handler to respond 
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reply_hi))
-        # Register the callback query handler to handle button presses
-        application.add_handler(CallbackQueryHandler(button_callback))
 
         # Start the bot
         logger.info("Bot is starting...")

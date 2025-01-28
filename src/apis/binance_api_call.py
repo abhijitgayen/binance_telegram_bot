@@ -5,6 +5,7 @@ import requests
 from src.db.init import Database
 from telegram import Update
 from setting import CREATE_ORDER_SLEEP
+from src.helpers.notify import direct_notify_admin
 
 class BinanceApiCall:
     def __init__(self, base_url):
@@ -62,7 +63,7 @@ class BinanceApiCall:
             "matchPrice": match_price,
             "totalAmount": total_amount,
             "tradeType": trade_type,
-            "buyType": "BY_AMOUNT",
+            "buyType": "BY_MONEY",
             "origin": "MAKE_TAKE",
         }
         return self._send_request("/sapi/v1/c2c/orderMatch/placeOrder", query_string, body) 
@@ -174,10 +175,11 @@ class BinanceApiCall:
                     """
                 message = f"✅ Order placed successfully ✅ \n\n {order_message}\n {order_message}"
                 await update.message.reply_text(message, parse_mode="Markdown")
-
+            
                 self.order += 1
                 self.amount_spend += total_amount
                 self.remaining_amount -= total_amount
+                direct_notify_admin(message)
 
             else:
                 error_message = response_place_order.get("msg", "Unknown error occurred.")
@@ -185,6 +187,20 @@ class BinanceApiCall:
                 message = f"🛑 Order Fail 🛑 \n\n {order_message} \nERR CODE: {error_code}\nERR MSG: {error_message}"
                 await update.message.reply_text(message, parse_mode="Markdown")
                 db.update_ads_response(adv_no=adv_order_number, response_code=error_code, response_message=error_message)
+
+                req_body = {
+                    "advOrderNumber": adv_order_number,
+                    "asset": CONFIG_ASSET,
+                    "fiatUnit": CONFIG_FIAT,
+                    "matchPrice": match_price,
+                    "totalAmount": total_amount,
+                    "tradeType": TRADE_TYPE,
+                    "buyType": "BY_MONEY",
+                    "origin": "MAKE_TAKE",
+                    "adv": adv
+                }
+
+                direct_notify_admin(message,req_body)
             
             if self.order >= NO_OF_ORDERS or self.amount_spend > TOTAL_AMOUNT_TO_INVEST:
                 if callback:
