@@ -49,7 +49,6 @@ Ensure the following are installed on your system:
    ```bash
    python main.py
    ```
-
 ---
 
 ### Docker Setup
@@ -74,14 +73,37 @@ Ensure the following are installed on your system:
    docker run -d --env-file .env -v $(pwd)/db:/app/db telegram_bot --name telegram_bot
    ```
 
-3. Check the logs to ensure the bot is running:
+5. Check the logs to ensure the bot is running:
    ```bash
    docker logs <container_id>
    ```
 
-4. Clean all container logs
+6. Clean all container logs
    ```bash
    sudo find /var/lib/docker/containers/ -type f -name "*.log" -exec truncate -s 0 {} \;
+   ```
+
+7. Docker helper
+
+   #### Enter inside the container
+   ```bash
+   docker exec -it <container_name_or_id> /bin/bash
+   ```
+
+   #### Install sqlite3
+   ```bash
+   apt-get update
+   apt-get install sqlite3 
+   ```
+
+   #### Read from db
+   ```bash
+   sqlite3 <path_of_db>.db
+   ```
+
+   #### Try sqlite query to see data
+   ```sql
+   SELECT * FROM ads where apiResponseCode is null and price < 90 ;
    ```
 
  
