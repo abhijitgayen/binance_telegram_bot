@@ -88,7 +88,7 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             "📌 **Example:**\n"
             "`/set_config TRADE_TYPE SELL`\n\n"
             "🔗 **For arrays:**\n"
-            "`/set_config EXTRA_FILTER.error_codes 83683,83682`",
+            "`/set_config EXTRA_FILTER.error_codes 83999,83685`",
             parse_mode="Markdown"
         )
 
