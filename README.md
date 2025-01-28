@@ -68,7 +68,7 @@ Ensure the following are installed on your system:
    docker run -d --env-file .env telegram_bot
    ```
 
-4. 
+4. Mounting the path
    ```bash
    docker run -d --env-file .env -v $(pwd)/db:/app/db telegram_bot --name telegram_bot
    ```
@@ -105,7 +105,3 @@ Ensure the following are installed on your system:
    ```sql
    SELECT * FROM ads where apiResponseCode is null and price < 90 ;
    ```
-
- 
-
-  
