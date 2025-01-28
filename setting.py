@@ -23,7 +23,7 @@ DEFAULT_BOT_CONFIG = {
         "price": 85,
         "minimum_limit": 100,
         # "maximum_limit": 1000,
-        "error_codes": ["83683","83682"]
+        "error_codes": ["83999"]
     },
     "API_KEY": "",
     "SECRET_KEY": ""

@@ -226,7 +226,7 @@ class Database:
                 raise ValueError("error_codes must be string or list")
                 
             placeholders = ','.join('?' * len(error_codes))
-            query += f" AND (apiResponseCode NOT IN ({placeholders}) OR apiResponseCode IS NULL)"
+            query += f" AND (apiResponseCode IN ({placeholders}) OR apiResponseCode IS NULL)"
             params.extend(error_codes)
 
         query += " ORDER BY createdAt DESC"

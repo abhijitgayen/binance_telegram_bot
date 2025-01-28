@@ -150,28 +150,29 @@ class BinanceApiCall:
             )
 
             if response_place_order.get("success") is True:
+                order_match = response_place_order.get("data",{}).get("orderMatch", {})
                 order_message = f"""
                     *📝 Order Information:*
 
-                    📋 *Order Number:* `{response_place_order.get('orderNumber', 'N/A')}`
-                    📋 *Adv Order Number:* `{response_place_order.get('advOrderNumber', 'N/A')}`
+                    📋 *Order Number:* `{order_match.get('orderNumber', 'N/A')}`
+                    📋 *Adv Order Number:* `{order_match.get('advOrderNumber', 'N/A')}`
 
-                    ⏳ *Allow Complain Time:* `{response_place_order.get('allowComplainTime', 'N/A')}`
-                    🧑‍💻 *User Id:* `{response_place_order.get('userId', 'N/A')}`
-                    👤 *Adv User Id:* `{response_place_order.get('advUserId', 'N/A')}`
+                    ⏳ *Allow Complain Time:* `{order_match.get('allowComplainTime', 'N/A')}`
+                    🧑‍💻 *User Id:* `{order_match.get('userId', 'N/A')}`
+                    👤 *Adv User Id:* `{order_match.get('advUserId', 'N/A')}`
 
                     🛍️ *Buyer Information:*
-                    - *Nickname:* `{response_place_order.get('buyerNickname', 'N/A')}`
-                    - *Name:* `{response_place_order.get('buyerName', 'N/A')}`
+                    - *Nickname:* `{order_match.get('buyerNickname', 'N/A')}`
+                    - *Name:* `{order_match.get('buyerName', 'N/A')}`
 
                     💰 *Transaction Details:*
-                    - *Amount:* `{response_place_order.get('amount', 'N/A')} {response_place_order.get('asset', 'N/A')}`
-                    - *Price:* `{response_place_order.get('price', 'N/A')} {response_place_order.get('fiatUnit', 'N/A')}/{response_place_order.get('asset', 'N/A')}`
-                    - *Total Price:* `{response_place_order.get('totalPrice', 'N/A')} {response_place_order.get('fiatUnit', 'N/A')}`
+                    - *Amount:* `{order_match.get('amount', 'N/A')} {order_match.get('asset', 'N/A')}`
+                    - *Price:* `{order_match.get('price', 'N/A')} {order_match.get('fiatUnit', 'N/A')}/{order_match.get('asset', 'N/A')}`
+                    - *Total Price:* `{order_match.get('totalPrice', 'N/A')} {order_match.get('fiatUnit', 'N/A')}`
 
                     💼 *Trade Information:*
-                    - *Trade Type:* `{response_place_order.get('tradeType', 'N/A')}`
-                    - *Pay Type:* `{response_place_order.get('payType', 'N/A')}`
+                    - *Trade Type:* `{order_match.get('tradeType', 'N/A')}`
+                    - *Pay Type:* `{order_match.get('payType', 'N/A')}`
                     """
                 message = f"✅ Order placed successfully ✅ \n\n {order_message}\n {order_message}"
                 await update.message.reply_text(message, parse_mode="Markdown")
@@ -179,8 +180,8 @@ class BinanceApiCall:
                 self.order += 1
                 self.amount_spend += total_amount
                 self.remaining_amount -= total_amount
-                direct_notify_admin(message)
-
+                direct_notify_admin(f"{message} \n\n {order_message}",response_place_order, True)
+                
             else:
                 error_message = response_place_order.get("msg", "Unknown error occurred.")
                 error_code = response_place_order.get('code', 'N/A')

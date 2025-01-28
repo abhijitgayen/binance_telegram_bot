@@ -24,26 +24,47 @@ async def notify_admin(context: ContextTypes.DEFAULT_TYPE, error_type: str, deta
         parse_mode="Markdown"
     )
 
-def direct_notify_admin(message ,req_body = {}):
-    json_message = json.dumps(req_body, indent=2)
+def direct_notify_admin(message, req_body={}, need_pin=False):
+    try:
+        json_message = json.dumps(req_body, indent=2)
 
+        # Prepare the payload for the Telegram API
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": NOTIFY_USER_ID,
+            "text": f"{message} \n\n<pre>{json_message}</pre>",
+            "parse_mode": "HTML",  # Use HTML to preserve JSON formatting
+            "disable_notification": True
+        }
 
-    # Prepare the payload for the Telegram API
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": NOTIFY_USER_ID,
-        "text": f"{message} \n\n<pre>{json_message}</pre>",
-        "parse_mode": "HTML" , # Use HTML to preserve JSON formatting
-        "disable_notification": True
-    }
+        print(f"Payload: {payload}")  # Debugging payload
 
-    # Send the message using a POST request
-    response = requests.post(url, json=payload)
+        # Send the message using a POST request
+        response = requests.post(url, json=payload)
 
-    # Return the API response (success or failure)
-    if response.status_code == 200:
-        print("Message sent successfully!")
-    else:
-        print("Failed to send message:", response.json())
+        # Check and log response
+        if response.status_code == 200:
+            print("Message sent successfully!")
 
-    return response.json()
+            if need_pin:
+                message_id = response.json().get("result", {}).get("message_id")
+                # Pin the message
+                pin_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/pinChatMessage"
+                pin_payload = {
+                    "chat_id": NOTIFY_USER_ID,
+                    "message_id": message_id,
+                    "disable_notification": True
+                }
+                pin_response = requests.post(pin_url, json=pin_payload)
+
+                if pin_response.status_code == 200:
+                    print("Message pinned successfully!")
+                else:
+                    print("Failed to pin the message:")
+        else:
+            print("Failed to send message:", response.text)
+
+        return response.json()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return {"error": str(e)}
