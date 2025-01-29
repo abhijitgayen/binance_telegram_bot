@@ -22,6 +22,9 @@ class BinanceApiCall:
         self.api_key = config.get("API_KEY")
         self.secret_key = config.get("SECRET_KEY")
         self.config = config
+        self.amount_spend = 0
+        self.remaining_amount = 0
+        self.order = 0
 
     def _generate_signature(self, query_string):
         """Generate HMAC SHA256 signature."""
