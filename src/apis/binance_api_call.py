@@ -174,13 +174,13 @@ class BinanceApiCall:
                     - *Trade Type:* `{order_match.get('tradeType', 'N/A')}`
                     - *Pay Type:* `{order_match.get('payType', 'N/A')}`
                     """
-                message = f"✅ Order placed successfully ✅ \n\n {order_message}\n {order_message}"
+                message = f"✅ Order placed successfully ✅ \n\n {order_message}"
                 await update.message.reply_text(message, parse_mode="Markdown")
             
                 self.order += 1
                 self.amount_spend += total_amount
                 self.remaining_amount -= total_amount
-                direct_notify_admin(f"{message} \n\n {order_message}",response_place_order, True)
+                direct_notify_admin(message,response_place_order, True)
                 
             else:
                 error_message = response_place_order.get("msg", "Unknown error occurred.")
